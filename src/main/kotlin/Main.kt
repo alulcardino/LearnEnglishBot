@@ -2,11 +2,13 @@ import java.io.File
 
 fun main() {
     val listOfWord = mutableListOf<Word>()
-    val wordsFile: File = File("dictionary.txt")
+    val wordsFile  = File("dictionary.txt")
     val words = wordsFile.readLines()
     for (string in words) {
         val splitedString = string.split("|")
-        listOfWord.add(Word(splitedString[0], splitedString[1], splitedString[1].toInt() ?: 0))
+        if (splitedString.size == 3) {
+            listOfWord.add(Word(splitedString[0], splitedString[1], splitedString[2].toIntOrNull() ?: 0))
+        }
     }
     listOfWord.forEach { println(it) }
 }
