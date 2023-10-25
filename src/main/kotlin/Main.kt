@@ -1,4 +1,7 @@
 import java.io.File
+import java.lang.StringBuilder
+
+const val IS_LEARNED = 3
 
 fun main() {
     val listOfWord = mutableListOf<Word>()
@@ -21,17 +24,17 @@ fun main() {
 }
 
 fun getStatistic(words: MutableList<Word>) {
-    val statistic = words.filter {
-        it.correctAnswersCount >= 3
+    val learnedWords = words.filter {
+        it.correctAnswersCount >= IS_LEARNED
     }
-    val percent = (statistic.size.toDouble() / words.size) * 100
-    println("Выучено ${statistic.size} из ${words.size} слов | $percent%")
+    val percent = (learnedWords.size.toDouble() / words.size) * 100
+    println("Выучено ${learnedWords.size} из ${words.size} слов | $percent%")
 }
 
 fun getUnlearnedWords(words: MutableList<Word>) {
     while (true) {
         val unlearnedWords = words.filter {
-            it.correctAnswersCount <= 3
+            it.correctAnswersCount <= IS_LEARNED
         }
         if (unlearnedWords.size == 4) {
             println("Вы выучили все слова")
@@ -39,22 +42,19 @@ fun getUnlearnedWords(words: MutableList<Word>) {
         }
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
-        println(
-            """
-        ${rightWord.englishWord}?
-        1. ${shuffledWords[0].russianWord}
-        2. ${shuffledWords[1].russianWord}
-        3. ${shuffledWords[2].russianWord}
-        4. ${shuffledWords[3].russianWord}
-        0. Назад в меню
-    """.trimIndent()
-        )
+        val options = StringBuilder()
+        shuffledWords.mapIndexed { index, word ->
+            options.append("${index + 1}. ${word.russianWord}\n")
+        }
 
+        println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
+
+        val answers = listOf(1, 2, 3, 4, 5)
         when (readln().toIntOrNull()) {
-            1 -> true
-            2 -> true
-            3 -> true
-            4 -> true
+            answers[1] -> TODO()
+            answers[2] -> TODO()
+            answers[3] -> TODO()
+            answers[4] -> TODO()
             else -> return
         }
     }
