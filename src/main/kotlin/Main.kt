@@ -1,7 +1,7 @@
 import java.io.File
 import java.lang.StringBuilder
 
-const val IS_LEARNED = 3
+const val learned_words_condition_threashold = 3
 
 fun main() {
     val listOfWord = mutableListOf<Word>()
@@ -25,7 +25,7 @@ fun main() {
 
 fun getStatistic(words: MutableList<Word>) {
     val learnedWords = words.filter {
-        it.correctAnswersCount >= IS_LEARNED
+        it.correctAnswersCount >= learned_words_condition_threashold
     }
     val percent = (learnedWords.size.toDouble() / words.size) * 100
     println("Выучено ${learnedWords.size} из ${words.size} слов | $percent%")
@@ -34,18 +34,18 @@ fun getStatistic(words: MutableList<Word>) {
 fun getUnlearnedWords(words: MutableList<Word>) {
     while (true) {
         val unlearnedWords = words.filter {
-            it.correctAnswersCount <= IS_LEARNED
+            it.correctAnswersCount <= learned_words_condition_threashold
         }
-        if (unlearnedWords.size == 4) {
+        if (unlearnedWords.isEmpty()) {
             println("Вы выучили все слова")
             return
         }
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
-        val options = StringBuilder()
-        shuffledWords.mapIndexed { index, word ->
-            options.append("${index + 1}. ${word.russianWord}\n")
-        }
+        val options = shuffledWords.mapIndexed{
+                index, word ->
+           "${index + 1}. ${word.russianWord}\n"
+        }.joinToString("")
 
         println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
 
