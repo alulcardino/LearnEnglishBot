@@ -1,8 +1,7 @@
 import java.io.File
 import java.lang.StringBuilder
 import java.util.*
-
-const val learned_words_condition_threashold = 3
+const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
 
 fun main() {
     val listOfWord = mutableListOf<Word>()
@@ -26,7 +25,7 @@ fun main() {
 
 fun getStatistic(words: MutableList<Word>) {
     val learnedWords = words.filter {
-        it.correctAnswersCount >= learned_words_condition_threashold
+        it.correctAnswersCount >= LEARNED_WORDS_CONDITION_THRESHOLD
     }
     val percent = (learnedWords.size.toDouble() / words.size) * 100
     println("Выучено ${learnedWords.size} из ${words.size} слов | $percent%")
@@ -35,7 +34,7 @@ fun getStatistic(words: MutableList<Word>) {
 fun getUnlearnedWords(words: MutableList<Word>) {
     while (true) {
         val unlearnedWords = words.filter {
-            it.correctAnswersCount <= learned_words_condition_threashold
+            it.correctAnswersCount <= LEARNED_WORDS_CONDITION_THRESHOLD
         }
         if (unlearnedWords.isEmpty()) {
             println("Вы выучили все слова")
@@ -50,22 +49,8 @@ fun getUnlearnedWords(words: MutableList<Word>) {
         }.joinToString("")
 
         println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
-
-        val answers = listOf(0, 1, 2, 3)
-        when (readln().toIntOrNull()) {
-            answers[0] -> if (answers[0] == rightWordIndex) {
-                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
-                saveDictionary(words)
-            }
-            answers[1] -> if (answers[1] == rightWordIndex) {
-                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
-                saveDictionary(words)
-            }
-            answers[2] -> if (answers[2] == rightWordIndex) {
-                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
-                saveDictionary(words)
-            }
-            answers[3] -> if (answers[3] == rightWordIndex) {
+        when (val userAnswer = readln().toIntOrNull()) {
+            1,2,3,4 -> if (userAnswer == rightWordIndex) {
                 words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
                 saveDictionary(words)
             }
