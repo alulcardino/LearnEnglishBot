@@ -1,5 +1,6 @@
 import java.io.File
 import java.lang.StringBuilder
+import java.util.*
 
 const val learned_words_condition_threashold = 3
 
@@ -42,6 +43,7 @@ fun getUnlearnedWords(words: MutableList<Word>) {
         }
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
+        val rightWordIndex = shuffledWords.indexOf(rightWord)
         val options = shuffledWords.mapIndexed{
                 index, word ->
            "${index + 1}. ${word.russianWord}\n"
@@ -49,21 +51,40 @@ fun getUnlearnedWords(words: MutableList<Word>) {
 
         println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
 
-        val answers = listOf(1, 2, 3, 4, 5)
+        val answers = listOf(0, 1, 2, 3)
         when (readln().toIntOrNull()) {
-            answers[1] -> TODO()
-            answers[2] -> TODO()
-            answers[3] -> TODO()
-            answers[4] -> TODO()
+            answers[0] -> if (answers[0] == rightWordIndex) {
+                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
+                saveDictionary(words)
+            }
+            answers[1] -> if (answers[1] == rightWordIndex) {
+                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
+                saveDictionary(words)
+            }
+            answers[2] -> if (answers[2] == rightWordIndex) {
+                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
+                saveDictionary(words)
+            }
+            answers[3] -> if (answers[3] == rightWordIndex) {
+                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
+                saveDictionary(words)
+            }
             else -> return
         }
+    }
+}
+
+fun saveDictionary(dictionary: List<Word>) {
+    val wordsFile = File("dictionary.txt")
+    for (word in dictionary) {
+        wordsFile.writeText("${word.englishWord}|${word.russianWord}|${word.correctAnswersCount}")
     }
 }
 
 data class Word(
     val englishWord: String,
     val russianWord: String,
-    val correctAnswersCount: Int,
+    var correctAnswersCount: Int,
 ) {
     override fun toString(): String {
         return "Word(englishWord='$englishWord', russianWord='$russianWord', correctAnswersCount=$correctAnswersCount)"
