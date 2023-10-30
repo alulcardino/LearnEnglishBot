@@ -1,6 +1,5 @@
 import java.io.File
-import java.lang.StringBuilder
-import java.util.*
+
 const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
 
 fun main() {
@@ -43,17 +42,19 @@ fun getUnlearnedWords(words: MutableList<Word>) {
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
         val rightWordIndex = shuffledWords.indexOf(rightWord)
-        val options = shuffledWords.mapIndexed{
-                index, word ->
-           "${index + 1}. ${word.russianWord}\n"
+        val options = shuffledWords.mapIndexed { index, word ->
+            "${index + 1}. ${word.russianWord}\n"
         }.joinToString("")
 
         println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
-        when (val userAnswer = readln().toIntOrNull()) {
-            1,2,3,4 -> if (userAnswer == rightWordIndex) {
+        when (readln().toIntOrNull()) {
+            0 -> return
+            rightWordIndex + 1 -> {
+                println("Правильно!")
                 words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
                 saveDictionary(words)
             }
+
             else -> return
         }
     }
@@ -61,8 +62,9 @@ fun getUnlearnedWords(words: MutableList<Word>) {
 
 fun saveDictionary(dictionary: List<Word>) {
     val wordsFile = File("dictionary.txt")
+    wordsFile.writeText("")
     for (word in dictionary) {
-        wordsFile.writeText("${word.englishWord}|${word.russianWord}|${word.correctAnswersCount}")
+        wordsFile.appendText("${word.englishWord}|${word.russianWord}|${word.correctAnswersCount}\n")
     }
 }
 
