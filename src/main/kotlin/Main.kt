@@ -54,8 +54,7 @@ fun getUnlearnedWords(words: MutableList<Word>) {
                 words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
                 saveDictionary(words)
             }
-
-            else -> return
+            else -> println("Неправильно!")
         }
     }
 }
