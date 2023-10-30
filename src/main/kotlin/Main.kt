@@ -1,7 +1,6 @@
 import java.io.File
-import java.lang.StringBuilder
 
-const val learned_words_condition_threashold = 3
+const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
 
 fun main() {
     val listOfWord = mutableListOf<Word>()
@@ -25,7 +24,7 @@ fun main() {
 
 fun getStatistic(words: MutableList<Word>) {
     val learnedWords = words.filter {
-        it.correctAnswersCount >= learned_words_condition_threashold
+        it.correctAnswersCount >= LEARNED_WORDS_CONDITION_THRESHOLD
     }
     val percent = (learnedWords.size.toDouble() / words.size) * 100
     println("Выучено ${learnedWords.size} из ${words.size} слов | $percent%")
@@ -34,7 +33,7 @@ fun getStatistic(words: MutableList<Word>) {
 fun getUnlearnedWords(words: MutableList<Word>) {
     while (true) {
         val unlearnedWords = words.filter {
-            it.correctAnswersCount <= learned_words_condition_threashold
+            it.correctAnswersCount <= LEARNED_WORDS_CONDITION_THRESHOLD
         }
         if (unlearnedWords.isEmpty()) {
             println("Вы выучили все слова")
@@ -42,28 +41,36 @@ fun getUnlearnedWords(words: MutableList<Word>) {
         }
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
-        val options = shuffledWords.mapIndexed{
-                index, word ->
-           "${index + 1}. ${word.russianWord}\n"
+        val rightWordIndex = shuffledWords.indexOf(rightWord)
+        val options = shuffledWords.mapIndexed { index, word ->
+            "${index + 1}. ${word.russianWord}\n"
         }.joinToString("")
 
         println("${rightWord.englishWord}?\n$options\n0. Назад в меню")
-
-        val answers = listOf(1, 2, 3, 4, 5)
         when (readln().toIntOrNull()) {
-            answers[1] -> TODO()
-            answers[2] -> TODO()
-            answers[3] -> TODO()
-            answers[4] -> TODO()
-            else -> return
+            0 -> return
+            rightWordIndex + 1 -> {
+                println("Правильно!")
+                words[unlearnedWords.indexOf(rightWord)].correctAnswersCount++
+                saveDictionary(words)
+            }
+            else -> println("Неправильно!")
         }
+    }
+}
+
+fun saveDictionary(dictionary: List<Word>) {
+    val wordsFile = File("dictionary.txt")
+    wordsFile.writeText("")
+    for (word in dictionary) {
+        wordsFile.appendText("${word.englishWord}|${word.russianWord}|${word.correctAnswersCount}\n")
     }
 }
 
 data class Word(
     val englishWord: String,
     val russianWord: String,
-    val correctAnswersCount: Int,
+    var correctAnswersCount: Int,
 ) {
     override fun toString(): String {
         return "Word(englishWord='$englishWord', russianWord='$russianWord', correctAnswersCount=$correctAnswersCount)"
