@@ -1,5 +1,3 @@
-const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
-
 data class Word(
     val englishWord: String,
     val russianWord: String,
@@ -18,7 +16,7 @@ fun Question.asConsoleString(): String {
 }
 
 fun main() {
-    val trainer = LearnWordsTrainer()
+    val trainer = LearnWordsTrainer(5, "dictionary.txt")
     while (true) {
         println("Меню: 1 – Учить слова, 2 – Статистика, 0 – Выход")
         when (readln().toIntOrNull() ?: 0) {

@@ -1,5 +1,8 @@
 import java.io.File
 
+const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
+
+
 data class Statistics(
     val learned: Int,
     val total: Int,
@@ -11,7 +14,11 @@ data class Question(
     val correctAnswer: Word,
 )
 
-class LearnWordsTrainer {
+class LearnWordsTrainer(
+    private val amountOfOptions: Int,
+    private val nameOfFileDictionary: String,
+
+    ) {
 
     private var question: Question? = null
     val dictionary = loadDictionary()
@@ -35,7 +42,7 @@ class LearnWordsTrainer {
         if (unlearnedWords.isEmpty()) {
             return null
         }
-        val shuffledWords = unlearnedWords.shuffled().take(4)
+        val shuffledWords = unlearnedWords.shuffled().take(amountOfOptions)
         val rightWord = shuffledWords.random()
         question = Question(
             shuffledWords,
@@ -58,7 +65,7 @@ class LearnWordsTrainer {
     }
 
     private fun saveDictionary(dictionary: List<Word>) {
-        val wordsFile = File("dictionary.txt")
+        val wordsFile = File(nameOfFileDictionary)
         wordsFile.writeText("")
         for (word in dictionary) {
             wordsFile.appendText("${word.englishWord}|${word.russianWord}|${word.correctAnswersCount}\n")
