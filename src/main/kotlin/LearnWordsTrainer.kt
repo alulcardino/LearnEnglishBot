@@ -1,8 +1,5 @@
 import java.io.File
 
-const val LEARNED_WORDS_CONDITION_THRESHOLD = 3
-
-
 data class Statistics(
     val learned: Int,
     val total: Int,
@@ -17,15 +14,15 @@ data class Question(
 class LearnWordsTrainer(
     private val amountOfOptions: Int,
     private val nameOfFileDictionary: String,
-
-    ) {
+    private val learnedWordsCondition: Int,
+) {
 
     private var question: Question? = null
     val dictionary = loadDictionary()
 
     fun getStatistic(words: List<Word>): Statistics {
         val learnedWords = words.filter {
-            it.correctAnswersCount >= LEARNED_WORDS_CONDITION_THRESHOLD
+            it.correctAnswersCount >= learnedWordsCondition
         }
         val percent = learnedWords.size * 100 / words.size
         return Statistics(
@@ -37,7 +34,7 @@ class LearnWordsTrainer(
 
     fun getNextQuestion(): Question? {
         val unlearnedWords = dictionary.filter {
-            it.correctAnswersCount <= LEARNED_WORDS_CONDITION_THRESHOLD
+            it.correctAnswersCount <= learnedWordsCondition
         }
         if (unlearnedWords.isEmpty()) {
             return null
@@ -74,7 +71,7 @@ class LearnWordsTrainer(
 
     private fun loadDictionary(): List<Word> {
         val dictionary = mutableListOf<Word>()
-        val wordsFile = File("dictionary.txt")
+        val wordsFile = File(nameOfFileDictionary)
         wordsFile.readLines().forEach {
             val splitString = it.split("|")
             if (splitString.size == 3) {

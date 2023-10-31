@@ -16,7 +16,7 @@ fun Question.asConsoleString(): String {
 }
 
 fun main() {
-    val trainer = LearnWordsTrainer(5, "dictionary.txt")
+    val trainer = LearnWordsTrainer(5, "dictionary.txt", 3)
     while (true) {
         println("Меню: 1 – Учить слова, 2 – Статистика, 0 – Выход")
         when (readln().toIntOrNull() ?: 0) {
