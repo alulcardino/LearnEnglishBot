@@ -5,14 +5,15 @@ data class Statistics(
     val total: Int,
     val percent: Int,
 )
+
 data class Question(
     val options: List<Word>,
-    val answer: Word,
+    val correctAnswer: Word,
 )
 
 class LearnWordsTrainer {
 
-    private  var question: Question? = null
+    private var question: Question? = null
     val dictionary = loadDictionary()
 
     fun getStatistic(words: List<Word>): Statistics {
@@ -27,7 +28,7 @@ class LearnWordsTrainer {
         )
     }
 
-    fun getNextQuestion() : Question? {
+    fun getNextQuestion(): Question? {
         val unlearnedWords = dictionary.filter {
             it.correctAnswersCount <= LEARNED_WORDS_CONDITION_THRESHOLD
         }
@@ -42,11 +43,11 @@ class LearnWordsTrainer {
         )
     }
 
-    fun checkAnswer(userAnswerIndex: Int?) : Boolean{
+    fun checkAnswer(userAnswerIndex: Int?): Boolean {
         return question?.let {
-            val correctAnswerIndex = it.options.indexOf(it.answer)
-            if (correctAnswerIndex == userAnswerIndex) {
-                it.answer.correctAnswersCount++
+            val correctAnswerIndex = it.options.indexOf(it.correctAnswer)
+            if (userAnswerIndex == correctAnswerIndex) {
+                it.correctAnswer.correctAnswersCount++
                 saveDictionary(dictionary)
                 true
             } else {

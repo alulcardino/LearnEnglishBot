@@ -14,10 +14,8 @@ fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
         "${index + 1}. ${word.russianWord}\n"
     }.joinToString("")
-    return "${this.answer.englishWord}?\n${options}options\n0. Назад в меню"
+    return "${this.correctAnswer.englishWord}?\n${options}\n0. Назад в меню"
 }
-
-
 
 fun main() {
     val trainer = LearnWordsTrainer()
@@ -41,7 +39,7 @@ fun main() {
                     if (trainer.checkAnswer(userAnswer?.minus(1))) {
                         println("Правильно!")
                     } else {
-                        println("Неправильно! ${question.answer.englishWord} - это ${question.answer.russianWord}")
+                        println("Неправильно! ${question.correctAnswer.englishWord} - это ${question.correctAnswer.russianWord}")
                     }
                 }
             }
