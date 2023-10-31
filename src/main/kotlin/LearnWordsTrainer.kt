@@ -37,10 +37,11 @@ class LearnWordsTrainer {
         }
         val shuffledWords = unlearnedWords.shuffled().take(4)
         val rightWord = shuffledWords.random()
-        return Question(
+        question = Question(
             shuffledWords,
             rightWord,
         )
+        return question
     }
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
@@ -55,7 +56,6 @@ class LearnWordsTrainer {
             }
         } ?: false
     }
-
 
     private fun saveDictionary(dictionary: List<Word>) {
         val wordsFile = File("dictionary.txt")

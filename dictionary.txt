@@ -1,7 +1,7 @@
 hello|привет|0
 dog|собака|0
 cat|кошка|0
-world|мир|3
+world|мир|4
 space|космос|4
 book|книга|1
 home|дом|3
