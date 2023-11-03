@@ -3,35 +3,37 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
+enum class TypeOfRegex(val regex: Regex) {
+    UPDATE_ID("\"update_id\":([0-9]+)".toRegex()),
+    CHAT_ID("\"id\":([0-9]+)".toRegex()),
+    MESSAGE("\"text\":\"(.+?)\"".toRegex()),
+}
+
+private fun fromJsonToValue(
+    typeOfRegex: TypeOfRegex,
+    updates: String,
+) : String? {
+    val matchResult: MatchResult? = typeOfRegex.regex.find(updates)
+    val groupsUpdate = matchResult?.groups
+    return groupsUpdate?.get(1)?.value
+}
+
 fun main(args: Array<String>) {
+    val telegramBotService = TelegramBotService()
     val token = args[0]
     var updateId = 0
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = getUpdates(token, updateId)
+        val updates: String = telegramBotService.getUpdates(token, updateId)
         println(updates)
-        val startUpdateId = updates.lastIndexOf("update_id")
-        val endUpdateId = updates.lastIndexOf(",\n\"message\"")
-        if (startUpdateId == -1 || endUpdateId == -1) continue
-        val updateIdString = updates.substring(startUpdateId + 11, endUpdateId)
-        println(updateIdString)
 
+        val updateIdString = fromJsonToValue(TypeOfRegex.UPDATE_ID, updates) ?: continue
         updateId = updateIdString.toInt() + 1
+
+        val chatId = fromJsonToValue(TypeOfRegex.CHAT_ID, updates)
+        val message = fromJsonToValue(TypeOfRegex.MESSAGE, updates)?.replace(" ", "%20")
+
+        telegramBotService.sendMessage(token, chatId, message)
     }
-
-}
-
-fun getUpdates(token: String, updateId: Int): String {
-  // val urlGetMe = "https://api.telegram.org/bot$token/getMe?offset=$updateId"
-    val urlGetUpdate = "https://api.telegram.org/bot$token/getUpdates?offset=$updateId"
-
-    val builder = HttpClient.newBuilder()
-    val client : HttpClient = builder.build()
-
-    val request : HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdate)).build()
-
-    val response : HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-
-    return response.body()
 }
