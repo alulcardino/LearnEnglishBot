@@ -33,7 +33,6 @@ fun main(args: Array<String>) {
 
         val chatId = fromJsonToValue(TypeOfRegex.CHAT_ID, updates)
         val message = fromJsonToValue(TypeOfRegex.MESSAGE, updates)?.replace(" ", "%20")
-
         telegramBotService.sendMessage(token, chatId, message)
     }
 }
