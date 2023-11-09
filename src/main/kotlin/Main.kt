@@ -1,18 +1,23 @@
-data class Word(
-    val englishWord: String,
-    val russianWord: String,
-    var correctAnswersCount: Int,
-) {
-    override fun toString(): String {
-        return "Word(englishWord='$englishWord', russianWord='$russianWord', correctAnswersCount=$correctAnswersCount)"
-    }
-}
+
 
 fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
         "${index + 1}. ${word.russianWord}\n"
     }.joinToString("")
     return "${this.correctAnswer.englishWord}?\n${options}\n0. Назад в меню"
+}
+
+fun Question.asJsonString(): String {
+    val options = this.options.mapIndexed { index, word ->
+        "${index + 1}. ${word.russianWord}\n"
+        """
+            {
+                "text":"${index + 1}. ${word.russianWord}",
+                "callback_data":"${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback}$index"
+            }
+        """.trimIndent()
+    }.joinToString(",\n")
+    return options
 }
 
 fun main() {
@@ -28,7 +33,7 @@ fun main() {
                         break
                     }
 
-                    println(question.asConsoleString())
+                    println(question.asJsonString())
 
                     val userAnswer = readln().toIntOrNull()
                     if (userAnswer == 0) break
@@ -42,7 +47,7 @@ fun main() {
                 }
             }
             2 -> {
-                val statistics = trainer.getStatistic(trainer.dictionary)
+                val statistics = trainer.getStatistic()
                 println("Выучено ${statistics.learned} из ${statistics.total} слов | ${statistics.percent}%")
 
             }
