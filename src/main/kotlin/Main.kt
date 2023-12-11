@@ -1,5 +1,4 @@
 
-
 fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
         "${index + 1}. ${word.russianWord}\n"
@@ -7,18 +6,6 @@ fun Question.asConsoleString(): String {
     return "${this.correctAnswer.englishWord}?\n${options}\n0. Назад в меню"
 }
 
-fun Question.asJsonString(): String {
-    val options = this.options.mapIndexed { index, word ->
-        "${index + 1}. ${word.russianWord}\n"
-        """
-            {
-                "text":"${index + 1}. ${word.russianWord}",
-                "callback_data":"${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback}$index"
-            }
-        """.trimIndent()
-    }.joinToString(",\n")
-    return options
-}
 
 fun main() {
     val trainer = LearnWordsTrainer(5, "dictionary.txt", 3)

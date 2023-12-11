@@ -17,13 +17,12 @@ private fun fromJsonToValue(
 
 fun main(args: Array<String>) {
     val trainer = LearnWordsTrainer()
-    val telegramBotService = TelegramBotService()
-    val token = args[0]
+    val telegramBotService = TelegramBotService(args[0])
     var updateId = 0
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = telegramBotService.getUpdates(token, updateId)
+        val updates: String = telegramBotService.getUpdates(updateId)
         println(updates)
 
         val updateIdString = fromJsonToValue(TypeOfRegex.UPDATE_ID, updates) ?: continue
@@ -33,49 +32,45 @@ fun main(args: Array<String>) {
         val message = fromJsonToValue(TypeOfRegex.MESSAGE, updates)
         val data = fromJsonToValue(TypeOfRegex.DATA, updates)
         if (message?.lowercase() == "menu" && chatId != null) {
-            telegramBotService.sendMenu(token, chatId)
+            telegramBotService.sendMenu( chatId)
         }
 
         if (data?.lowercase() == CALLBACKS.STATISTICS_CLICKED.callback && chatId != null) {
             val statistics = trainer.getStatistic()
             telegramBotService.sendMessage(
-                token,
                 chatId,
                 "Выучено ${statistics.learned} из ${statistics.total} слов | ${statistics.percent}%"
             )
         }
         if (trainer.question == null) {
-            checkNextQuestionAndSend(telegramBotService, trainer, token, chatId)
+            checkNextQuestionAndSend(telegramBotService, trainer, chatId)
         }
         if (data?.startsWith(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback) == true) {
             val index = data.substringAfter(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback).toIntOrNull()
             if (trainer.checkAnswer(index)) {
-                telegramBotService.sendMessage(token, chatId, "Правильно!")
+                telegramBotService.sendMessage(chatId, "Правильно!")
             } else {
                 telegramBotService.sendMessage(
-                    token,
                     chatId,
                     "${trainer.question?.correctAnswer?.englishWord} - ${trainer.question?.correctAnswer?.russianWord}"
                 )
             }
-            checkNextQuestionAndSend(telegramBotService, trainer, token, chatId)
+            checkNextQuestionAndSend(telegramBotService, trainer, chatId)
         }
     }
-
 }
 
 fun checkNextQuestionAndSend(
     service: TelegramBotService,
     trainer: LearnWordsTrainer,
-    token: String,
     chatId: String?
 ): Question? {
     val question = trainer.getNextQuestion()
     return if (question == null) {
-        service.sendMessage(token, chatId, "Вы выучили все слова в базе")
+        service.sendMessage(chatId, "Вы выучили все слова в базе")
         null
     } else {
-        service.sendQuestion(token, chatId, question)
+        service.sendQuestion(chatId, question)
         question
     }
 }

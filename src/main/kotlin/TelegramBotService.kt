@@ -7,7 +7,18 @@ import java.nio.charset.StandardCharsets
 
 const val START_URL = "https://api.telegram.org/bot"
 
-
+fun Question.asJsonString(): String {
+    val options = this.options.mapIndexed { index, word ->
+        """[
+                {
+                    "text":"${index + 1}. ${word.russianWord}",
+                    "callback_data":"${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback}$index"
+                }
+          ]
+        """.trimIndent()
+    }.joinToString(",\n")
+    return options
+}
 
 enum class CALLBACKS(val callback: String) {
     STATISTICS_CLICKED("statistics_clicked"),
@@ -15,12 +26,14 @@ enum class CALLBACKS(val callback: String) {
     CALLBACK_DATA_ANSWER_PREFIX("answer_")
 }
 
-class TelegramBotService {
+class TelegramBotService(
+    private val token: String
+) {
 
     private val builder: HttpClient.Builder = HttpClient.newBuilder()
     private val client: HttpClient = builder.build()
 
-    fun getUpdates(token: String, updateId: Int): String {
+    fun getUpdates(updateId: Int): String {
         val urlGetUpdate = "$START_URL$token/getUpdates?offset=$updateId"
 
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdate)).build()
@@ -29,7 +42,7 @@ class TelegramBotService {
         return response.body()
     }
 
-    fun sendMessage(token: String, chatId: String?, text: String?): String {
+    fun sendMessage(chatId: String?, text: String?): String {
         val encoded = URLEncoder.encode(
             text,
             StandardCharsets.UTF_8
@@ -42,7 +55,7 @@ class TelegramBotService {
         return response.body()
     }
 
-    fun sendQuestion(token: String, chatId: String?, question: Question) : String{
+    fun sendQuestion(chatId: String?, question: Question) : String{
         val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
         val sendQuestionBody = """
             {
@@ -50,9 +63,7 @@ class TelegramBotService {
                 "text": "${question.correctAnswer.englishWord}",
                 "reply_markup": {
                     "inline_keyboard": [
-                        [
                               ${question.asJsonString()}
-                        ]
                     ]
                 }
             }
@@ -68,7 +79,7 @@ class TelegramBotService {
         return response.body()
     }
 
-    fun sendMenu(token: String, chatId: String?): String {
+    fun sendMenu(chatId: String?): String {
         val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
         val sendMenuBody = """
             {
