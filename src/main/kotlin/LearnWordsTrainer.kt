@@ -1,5 +1,15 @@
 import java.io.File
 
+data class Word(
+    val englishWord: String,
+    val russianWord: String,
+    var correctAnswersCount: Int,
+) {
+    override fun toString(): String {
+        return "Word(englishWord='$englishWord', russianWord='$russianWord', correctAnswersCount=$correctAnswersCount)"
+    }
+}
+
 data class Statistics(
     val learned: Int,
     val total: Int,
@@ -12,22 +22,22 @@ data class Question(
 )
 
 class LearnWordsTrainer(
-    private val amountOfOptions: Int,
-    private val nameOfFileDictionary: String,
-    private val learnedWordsCondition: Int,
+    private val amountOfOptions: Int = 4,
+    private val nameOfFileDictionary: String = "dictionary.txt",
+    private val learnedWordsCondition: Int = 3,
 ) {
 
-    private var question: Question? = null
+    var question: Question? = null
     val dictionary = loadDictionary()
 
-    fun getStatistic(words: List<Word>): Statistics {
-        val learnedWords = words.filter {
+    fun getStatistic(): Statistics {
+        val learnedWords = dictionary.filter {
             it.correctAnswersCount >= learnedWordsCondition
         }
-        val percent = learnedWords.size * 100 / words.size
+        val percent = learnedWords.size * 100 / dictionary.size
         return Statistics(
             learnedWords.size,
-            words.size,
+            dictionary.size,
             percent
         )
     }
@@ -80,4 +90,5 @@ class LearnWordsTrainer(
         }
         return dictionary
     }
+
 }

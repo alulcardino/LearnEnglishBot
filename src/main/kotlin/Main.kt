@@ -1,12 +1,3 @@
-data class Word(
-    val englishWord: String,
-    val russianWord: String,
-    var correctAnswersCount: Int,
-) {
-    override fun toString(): String {
-        return "Word(englishWord='$englishWord', russianWord='$russianWord', correctAnswersCount=$correctAnswersCount)"
-    }
-}
 
 fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
@@ -14,6 +5,7 @@ fun Question.asConsoleString(): String {
     }.joinToString("")
     return "${this.correctAnswer.englishWord}?\n${options}\n0. Назад в меню"
 }
+
 
 fun main() {
     val trainer = LearnWordsTrainer(5, "dictionary.txt", 3)
@@ -28,7 +20,7 @@ fun main() {
                         break
                     }
 
-                    println(question.asConsoleString())
+                    println(question.asJsonString())
 
                     val userAnswer = readln().toIntOrNull()
                     if (userAnswer == 0) break
@@ -42,7 +34,7 @@ fun main() {
                 }
             }
             2 -> {
-                val statistics = trainer.getStatistic(trainer.dictionary)
+                val statistics = trainer.getStatistic()
                 println("Выучено ${statistics.learned} из ${statistics.total} слов | ${statistics.percent}%")
 
             }
