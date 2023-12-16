@@ -1,8 +1,8 @@
 hello|привет|4
-dog|собака|2
-cat|кошка|1
-world|мир|1
-space|космос|2
+dog|собака|4
+cat|кошка|4
+world|мир|4
+space|космос|4
 wodasdasdasdsadasdasdasdasdasdqweqwsasadrld|мыфвйфвыфвфывыфвйцсчясир|4
 book|книга|4
 home|дом|4

@@ -19,9 +19,6 @@ fun main() {
                         println("Вы выучили все слова")
                         break
                     }
-
-                    println(question.asJsonString())
-
                     val userAnswer = readln().toIntOrNull()
                     if (userAnswer == 0) break
 
