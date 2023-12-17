@@ -26,6 +26,7 @@ fun Question.asJsonString(): String {
 enum class CALLBACKS(val callback: String) {
     STATISTICS_CLICKED("statistics_clicked"),
     LEARN_WORDS_CLICKED("learn_words_clicked"),
+    RESET_CLICKED("reset_clicked"),
     CALLBACK_DATA_ANSWER_PREFIX("answer_")
 }
 
@@ -60,18 +61,6 @@ class TelegramBotService(
 
     fun sendQuestion(chatId: Long, question: Question, json: Json): String {
         val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
-        val sendQuestionBody = """
-            {
-                "chat_id": $chatId,
-                "text": "${question.correctAnswer.englishWord}",
-                "reply_markup": {
-                    "inline_keyboard": [
-                              ${question.asJsonString()}
-                    ]
-                }
-            }
-        """.trimIndent()
-        println(sendQuestionBody)
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = question.correctAnswer.englishWord,
@@ -80,9 +69,9 @@ class TelegramBotService(
                 listOf(question.options.mapIndexed { index, word ->
                     InlineKeyboard(
                         text = word.russianWord,
-                        callbackData = "${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX}$index"
+                        callbackData = "${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback}$index"
                     )
-                })
+                }),
             )
         )
         val requestBodyString = json.encodeToString(requestBody)
@@ -111,7 +100,13 @@ class TelegramBotService(
                         InlineKeyboard(
                             text = "Статистика",
                             callbackData = CALLBACKS.STATISTICS_CLICKED.name
-                        )
+                        ),
+                    ),
+                    listOf(
+                        InlineKeyboard(
+                            text = "Сбросить прогресс",
+                            callbackData = CALLBACKS.RESET_CLICKED.name
+                        ),
                     )
                 )
             )

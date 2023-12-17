@@ -68,10 +68,9 @@ data class InlineKeyboard(
 
 fun main(args: Array<String>) {
 
-    val trainer = LearnWordsTrainer()
     val telegramBotService = TelegramBotService(args[0])
     var lastUpdateId = 0L
-
+    val trainers = HashMap<Long, LearnWordsTrainer>()
     val json = Json {
         ignoreUnknownKeys = true
     }
@@ -81,43 +80,61 @@ fun main(args: Array<String>) {
         val responseString: String = telegramBotService.getUpdates(lastUpdateId)
         println(responseString)
         val response: Response = json.decodeFromString(responseString)
-        val updates = response.result
-        val firstUpdate = updates.firstOrNull() ?: continue
-        val updateId = firstUpdate.updateId
-        lastUpdateId = updateId + 1
+        if (response.result.isEmpty()) continue
+        val sortedUpdates = response.result.sortedBy { it.updateId }
+        sortedUpdates.forEach { handleUpdate(it, json, trainers, telegramBotService) }
+        lastUpdateId = sortedUpdates.last().updateId + 1
+    }
+}
 
-        val message = firstUpdate.message?.text
-        val chatId = firstUpdate.message?.chat?.id ?: firstUpdate.callbackQuery?.message?.chat?.id
-        val data = firstUpdate.callbackQuery?.data
+fun handleUpdate(
+    update: Update,
+    json: Json,
+    trainers: HashMap<Long, LearnWordsTrainer>,
+    service: TelegramBotService
+) {
 
-        if (message?.lowercase() == "/start" && chatId != null) {
-            telegramBotService.sendMenu(chatId, json)
-        }
+    val message = update.message?.text
+    val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
+    val data = update.callbackQuery?.data
 
-        if (data?.lowercase() == CALLBACKS.LEARN_WORDS_CLICKED.callback && chatId != null) {
-            checkNextQuestionAndSend(telegramBotService, trainer, chatId, json)
-        }
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(nameOfFileDictionary =  "$chatId.txt")}
+    if (message?.lowercase() == "/start") {
+        service.sendMenu(chatId, json)
+    }
 
-        if (data?.lowercase() == CALLBACKS.STATISTICS_CLICKED.callback && chatId != null) {
-            val statistics = trainer.getStatistic()
-            telegramBotService.sendMessage(
+    if (data?.lowercase() == CALLBACKS.LEARN_WORDS_CLICKED.callback) {
+        checkNextQuestionAndSend(service, trainer, chatId, json)
+    }
+
+    if (data?.lowercase() == CALLBACKS.RESET_CLICKED.callback) {
+        trainer.resetProgress()
+        service.sendMessage(
+            chatId,
+            "Прогресс успешно сброшен"
+        )
+        service.sendMenu(chatId, json)
+    }
+
+    if (data?.lowercase() == CALLBACKS.STATISTICS_CLICKED.callback) {
+        val statistics = trainer.getStatistic()
+        service.sendMessage(
+            chatId,
+            "Выучено ${statistics.learned} из ${statistics.total} слов | ${statistics.percent}%"
+        )
+    }
+
+    if (data?.startsWith(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback) == true) {
+        val index = data.substringAfter(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback).toIntOrNull()
+        if (trainer.checkAnswer(index)) {
+            service.sendMessage(chatId, "Правильно!")
+        } else {
+            service.sendMessage(
                 chatId,
-                "Выучено ${statistics.learned} из ${statistics.total} слов | ${statistics.percent}%"
+                "${trainer.question?.correctAnswer?.englishWord} - ${trainer.question?.correctAnswer?.russianWord}"
             )
         }
-
-        if (data?.startsWith(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback) == true && chatId != null) {
-            val index = data.substringAfter(CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback).toIntOrNull()
-            if (trainer.checkAnswer(index)) {
-                telegramBotService.sendMessage(chatId, "Правильно!")
-            } else {
-                telegramBotService.sendMessage(
-                    chatId,
-                    "${trainer.question?.correctAnswer?.englishWord} - ${trainer.question?.correctAnswer?.russianWord}"
-                )
-            }
-            checkNextQuestionAndSend(telegramBotService, trainer, chatId, json)
-        }
+        checkNextQuestionAndSend(service, trainer, chatId, json)
     }
 }
 
