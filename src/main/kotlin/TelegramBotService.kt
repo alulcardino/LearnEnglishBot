@@ -63,7 +63,7 @@ class TelegramBotService(
             val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
             response.body()
         }.onFailure {
-            "Problems with server"
+            println("Problems with server: ${it.message}")
         }.getOrDefault("request")
     }
 
@@ -93,7 +93,7 @@ class TelegramBotService(
             val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
             response.body()
         }.onFailure {
-            "Problems with server"
+            println("Problems with server: ${it.message}")
         }.getOrDefault("request")
     }
 
@@ -135,7 +135,7 @@ class TelegramBotService(
             val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
             response.body()
         }.onFailure {
-            "Problems with server"
+            println("Problems with server: ${it.message}")
         }.getOrDefault("request")
     }
 }
