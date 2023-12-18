@@ -1,3 +1,6 @@
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -23,6 +26,7 @@ fun Question.asJsonString(): String {
 enum class CALLBACKS(val callback: String) {
     STATISTICS_CLICKED("statistics_clicked"),
     LEARN_WORDS_CLICKED("learn_words_clicked"),
+    RESET_CLICKED("reset_clicked"),
     CALLBACK_DATA_ANSWER_PREFIX("answer_")
 }
 
@@ -33,82 +37,105 @@ class TelegramBotService(
     private val builder: HttpClient.Builder = HttpClient.newBuilder()
     private val client: HttpClient = builder.build()
 
-    fun getUpdates(updateId: Int): String {
-        val urlGetUpdate = "$START_URL$token/getUpdates?offset=$updateId"
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
 
+    fun getUpdates(updateId: Long): Response {
+        val urlGetUpdate = "$START_URL$token/getUpdates?offset=$updateId"
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdate)).build()
 
         val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-        return response.body()
+
+        return json.decodeFromString(response.body())
     }
 
-    fun sendMessage(chatId: String?, text: String?): String {
-        val encoded = URLEncoder.encode(
-            text,
-            StandardCharsets.UTF_8
-        )
-        val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId&text=$encoded"
+    fun sendMessage(chatId: Long, text: String?): String {
+        return runCatching {
+            val encoded = URLEncoder.encode(
+                text,
+                StandardCharsets.UTF_8
+            )
+            val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId&text=$encoded"
 
-        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage)).build()
+            val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage)).build()
 
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-        return response.body()
+            val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+            response.body()
+        }.onFailure {
+            println("Problems with server: ${it.message}")
+        }.getOrDefault("request")
     }
 
-    fun sendQuestion(chatId: String?, question: Question) : String{
-        val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
-        val sendQuestionBody = """
-            {
-                "chat_id": $chatId,
-                "text": "${question.correctAnswer.englishWord}",
-                "reply_markup": {
-                    "inline_keyboard": [
-                              ${question.asJsonString()}
-                    ]
-                }
-            }
-        """.trimIndent()
-        println(sendQuestionBody)
+    fun sendQuestion(chatId: Long, question: Question): String {
+        return runCatching {
+            val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
+            val requestBody = SendMessageRequest(
+                chatId = chatId,
+                text = question.correctAnswer.englishWord,
+                replyMarkup =
+                ReplyMarkup(
+                    listOf(question.options.mapIndexed { index, word ->
+                        InlineKeyboard(
+                            text = word.russianWord,
+                            callbackData = "${CALLBACKS.CALLBACK_DATA_ANSWER_PREFIX.callback}$index"
+                        )
+                    }),
+                )
+            )
+            val requestBodyString = json.encodeToString(requestBody)
 
-        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(sendQuestionBody))
-            .build()
+            val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
+                .header("Content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+                .build()
 
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-        return response.body()
+            val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+            response.body()
+        }.onFailure {
+            println("Problems with server: ${it.message}")
+        }.getOrDefault("request")
     }
 
-    fun sendMenu(chatId: String?): String {
-        val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
-        val sendMenuBody = """
-            {
-                "chat_id": $chatId,
-                "text": "Основное меню",
-                "reply_markup": {
-                    "inline_keyboard": [
-                        [
-                            {
-                                 "text": "Изучить слова",
-                                 "callback_data": "${CALLBACKS.LEARN_WORDS_CLICKED.name}"
-                            },
-                            {
-                                 "text": "Статистика",
-                                 "callback_data": "${CALLBACKS.STATISTICS_CLICKED.name}"
-                            }
-                        ]
-                    ]
-                }
+    fun sendMenu(chatId: Long): String {
+        return runCatching {
 
-            }
-        """.trimIndent()
+            val urlSendMessage = "$START_URL$token/sendMessage?chat_id=$chatId"
+            val requestBody = SendMessageRequest(
+                chatId = chatId,
+                text = "Основное меню",
+                replyMarkup = ReplyMarkup(
+                    listOf(
+                        listOf(
+                            InlineKeyboard(
+                                text = "Изучать слова",
+                                callbackData = CALLBACKS.LEARN_WORDS_CLICKED.name
+                            ),
+                            InlineKeyboard(
+                                text = "Статистика",
+                                callbackData = CALLBACKS.STATISTICS_CLICKED.name
+                            ),
+                        ),
+                        listOf(
+                            InlineKeyboard(
+                                text = "Сбросить прогресс",
+                                callbackData = CALLBACKS.RESET_CLICKED.name
+                            ),
+                        )
+                    )
+                )
+            )
+            val requestBodyString = json.encodeToString(requestBody)
 
-        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(sendMenuBody))
-            .build()
+            val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
+                .header("Content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+                .build()
 
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-        return response.body()
+            val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+            response.body()
+        }.onFailure {
+            println("Problems with server: ${it.message}")
+        }.getOrDefault("request")
     }
 }

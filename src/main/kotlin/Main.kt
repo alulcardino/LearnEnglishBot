@@ -1,4 +1,3 @@
-
 fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
         "${index + 1}. ${word.russianWord}\n"
@@ -19,9 +18,6 @@ fun main() {
                         println("Вы выучили все слова")
                         break
                     }
-
-                    println(question.asJsonString())
-
                     val userAnswer = readln().toIntOrNull()
                     if (userAnswer == 0) break
 
