@@ -12,6 +12,8 @@ data class Word(
     }
 }
 
+const val NAME_OF_DICTIONARY_FILE = "dictionary.txt"
+
 data class Statistics(
     val learned: Int,
     val total: Int,
@@ -25,12 +27,11 @@ data class Question(
 
 class LearnWordsTrainer(
     private val amountOfOptions: Int = 4,
-    private val nameOfFileDictionary: String = "dictionary.txt",
+    private val nameOfFileDictionary: String = NAME_OF_DICTIONARY_FILE,
     private val learnedWordsCondition: Int = 3,
 ) {
 
     var question: Question? = null
-    val dictionary = loadDictionary()
 
     fun getStatistic(): Statistics {
         val learnedWords = dictionary.filter {
@@ -81,19 +82,13 @@ class LearnWordsTrainer(
         }
     }
 
-    private fun loadDictionary(): List<Word> {
-        val dictionary = mutableListOf<Word>()
-        val wordsFile = File(nameOfFileDictionary)
-        if (!wordsFile.exists()) {
-            File("dictionary.txt").copyTo(wordsFile)
+    private val dictionary = File(NAME_OF_DICTIONARY_FILE).readLines().mapNotNull {
+        val splitString = it.split("|")
+        if (splitString.size == 3) {
+            Word(splitString[0], splitString[1], splitString[2].toIntOrNull() ?: 0)
+        } else {
+            null
         }
-        wordsFile.readLines().forEach {
-            val splitString = it.split("|")
-            if (splitString.size == 3) {
-                dictionary.add(Word(splitString[0], splitString[1], splitString[2].toIntOrNull() ?: 0))
-            }
-        }
-        return dictionary
     }
 
     fun resetProgress() {

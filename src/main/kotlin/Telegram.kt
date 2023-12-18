@@ -1,7 +1,5 @@
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 @Serializable
 data class Update(
@@ -71,25 +69,22 @@ fun main(args: Array<String>) {
     val telegramBotService = TelegramBotService(args[0])
     var lastUpdateId = 0L
     val trainers = HashMap<Long, LearnWordsTrainer>()
-    val json = Json {
-        ignoreUnknownKeys = true
-    }
+
+
 
     while (true) {
         Thread.sleep(500)
-        val responseString: String = telegramBotService.getUpdates(lastUpdateId)
-        println(responseString)
-        val response: Response = json.decodeFromString(responseString)
+        val response: Response = telegramBotService.getUpdates(lastUpdateId)
+        println(response)
         if (response.result.isEmpty()) continue
         val sortedUpdates = response.result.sortedBy { it.updateId }
-        sortedUpdates.forEach { handleUpdate(it, json, trainers, telegramBotService) }
+        sortedUpdates.forEach { handleUpdate(it, trainers, telegramBotService) }
         lastUpdateId = sortedUpdates.last().updateId + 1
     }
 }
 
 fun handleUpdate(
     update: Update,
-    json: Json,
     trainers: HashMap<Long, LearnWordsTrainer>,
     service: TelegramBotService
 ) {
@@ -98,13 +93,13 @@ fun handleUpdate(
     val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
     val data = update.callbackQuery?.data
 
-    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(nameOfFileDictionary =  "$chatId.txt")}
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(nameOfFileDictionary = "$chatId.txt") }
     if (message?.lowercase() == "/start") {
-        service.sendMenu(chatId, json)
+        service.sendMenu(chatId)
     }
 
     if (data?.lowercase() == CALLBACKS.LEARN_WORDS_CLICKED.callback) {
-        checkNextQuestionAndSend(service, trainer, chatId, json)
+        checkNextQuestionAndSend(service, trainer, chatId)
     }
 
     if (data?.lowercase() == CALLBACKS.RESET_CLICKED.callback) {
@@ -113,7 +108,7 @@ fun handleUpdate(
             chatId,
             "Прогресс успешно сброшен"
         )
-        service.sendMenu(chatId, json)
+        service.sendMenu(chatId)
     }
 
     if (data?.lowercase() == CALLBACKS.STATISTICS_CLICKED.callback) {
@@ -134,7 +129,7 @@ fun handleUpdate(
                 "${trainer.question?.correctAnswer?.englishWord} - ${trainer.question?.correctAnswer?.russianWord}"
             )
         }
-        checkNextQuestionAndSend(service, trainer, chatId, json)
+        checkNextQuestionAndSend(service, trainer, chatId)
     }
 }
 
@@ -142,14 +137,13 @@ fun checkNextQuestionAndSend(
     service: TelegramBotService,
     trainer: LearnWordsTrainer,
     chatId: Long,
-    json: Json,
 ): Question? {
     val question = trainer.getNextQuestion()
     return if (question == null) {
         service.sendMessage(chatId, "Вы выучили все слова в базе")
         null
     } else {
-        service.sendQuestion(chatId, question, json)
+        service.sendQuestion(chatId, question)
         question
     }
 }

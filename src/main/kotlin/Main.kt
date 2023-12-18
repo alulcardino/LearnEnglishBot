@@ -1,4 +1,3 @@
-
 fun Question.asConsoleString(): String {
     val options = this.options.mapIndexed { index, word ->
         "${index + 1}. ${word.russianWord}\n"
